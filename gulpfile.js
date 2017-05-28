@@ -13,6 +13,7 @@ const gulp = require('gulp'),
       cachebust = require('gulp-cache-bust'),
       plumber = require('gulp-plumber'),
       pug = require('gulp-pug'),
+      font2css = require('gulp-font2css').default,
       eslint = require('gulp-eslint'),
       babel = require('gulp-babel'),
       uglify = require('gulp-uglify'),
@@ -25,12 +26,13 @@ const processors = [
 ];
 
 const paths = {
+  build: 'build/',
+  source: 'src/',
   components: 'src/components/',
-  bundles: 'src/bundles/',
   pages: 'src/pages/',
   images: 'src/images',
-  styles: 'src/bundles/styles/',
-  scripts: 'src/bundles/scripts',
+  styles: 'src/build/styles/',
+  scripts: 'src/build/scripts',
   html: './'
 };
 
@@ -40,7 +42,7 @@ gulp.task('watch', ['build'], function() {
   gulp.watch(paths.components + '**/*.js', ['scripts', 'reload']);
   gulp.watch(paths.images + '*.{png,jpg,gif,svg}', ['reload']).on('change', function(event) {
     if (event.type === 'deleted') {
-      del(paths.bundles + path.basename(event.path));
+      del(paths.images + path.basename(event.path));
       delete cache.caches['images'][event.path];
     }
   });
@@ -54,15 +56,22 @@ gulp.task('pages', function() {
     .pipe(gulp.dest(paths.html))
 });
 
-gulp.task('styles', function () {
-  return gulp.src(paths.components + '**/*.pcss')
+gulp.task('fonts', function() {
+  return gulp.src('src/fonts/**/*.{otf,ttf,woff,woff2}')
+    .pipe(font2css())
+    .pipe(concat('fonts.pcss'))
+    .pipe(gulp.dest('src/styles'))
+});
+
+gulp.task('styles', ['fonts'], function () {
+  return gulp.src(paths.source + '**/*.pcss')
     .pipe(plumber({ errorHandler: onError }))
     .pipe(sourcemaps.init())
     .pipe(postcss(processors))
     .pipe(concat('styles.min.css'))
-    .pipe(nano())
+    .pipe(nano({discardUnused: { fontFace: false, namespace: false }}))
     .pipe(sourcemaps.write())
-    .pipe(gulp.dest(paths.bundles));
+    .pipe(gulp.dest(paths.build));
 });
 
 gulp.task('scripts', function() {
@@ -73,7 +82,7 @@ gulp.task('scripts', function() {
     .pipe(babel())
     .pipe(concat('scripts.min.js'))
     .pipe(uglify())
-    .pipe(gulp.dest(paths.bundles));
+    .pipe(gulp.dest(paths.build));
 });
 
 gulp.task('images', function() {
@@ -83,7 +92,7 @@ gulp.task('images', function() {
     .pipe(image({
       verbose: true
     }))
-    .pipe(gulp.dest(paths.bundles + 'images'));
+    .pipe(gulp.dest(paths.build + 'images'));
 });
 
 gulp.task('cache', function() {
