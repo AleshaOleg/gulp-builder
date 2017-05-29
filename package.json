@@ -13,7 +13,9 @@
     "url": "https://github.com/AleshaOleg/gulp-builder/issues"
   },
   "homepage": "https://github.com/AleshaOleg/gulp-builder#readme",
-  "dependencies": {},
+  "dependencies": {
+    "global": "^4.3.2"
+  },
   "babel": {
     "presets": [
       "es2015"
