@@ -1,24 +1,26 @@
 const gulp = require('gulp'),
-      postcss = require('gulp-postcss'),
-      precss = require('precss'),
-      cssnext = require('postcss-cssnext'),
-      gutil = require('gulp-util'),
-      sourcemaps = require('gulp-sourcemaps'),
-      nano = require('gulp-cssnano'),
-      concat = require('gulp-concat'),
-      cache = require('gulp-cached'),
-      portfinder = require('portfinder'),
-      image = require('gulp-imagemin'),
-      browserSync = require('browser-sync'),
-      cachebust = require('gulp-cache-bust'),
-      plumber = require('gulp-plumber'),
-      pug = require('gulp-pug'),
-      font2css = require('gulp-font2css').default,
-      eslint = require('gulp-eslint'),
-      babel = require('gulp-babel'),
-      uglify = require('gulp-uglify'),
-      reload = browserSync.reload,
-      debug = require('gulp-debug');
+  path = require('path'),
+  del = require('del'),
+  postcss = require('gulp-postcss'),
+  precss = require('precss'),
+  cssnext = require('postcss-cssnext'),
+  gutil = require('gulp-util'),
+  sourcemaps = require('gulp-sourcemaps'),
+  nano = require('gulp-cssnano'),
+  concat = require('gulp-concat'),
+  cache = require('gulp-cached'),
+  portfinder = require('portfinder'),
+  image = require('gulp-imagemin'),
+  browserSync = require('browser-sync'),
+  cachebust = require('gulp-cache-bust'),
+  plumber = require('gulp-plumber'),
+  pug = require('gulp-pug'),
+  font2css = require('gulp-font2css').default,
+  eslint = require('gulp-eslint'),
+  babel = require('gulp-babel'),
+  uglify = require('gulp-uglify'),
+  reload = browserSync.reload,
+  debug = require('gulp-debug');
 
 const processors = [
   precss(),
@@ -30,17 +32,19 @@ const paths = {
   source: 'src/',
   components: 'src/components/',
   pages: 'src/pages/',
-  images: 'src/images',
-  styles: 'src/build/styles/',
-  scripts: 'src/build/scripts',
+  images: 'src/images/',
+  fonts: 'src/fonts/',
+  styles: 'src/styles/',
+  scripts: 'src/scripts/',
   html: './'
 };
 
 gulp.task('watch', ['build'], function() {
   gulp.watch([paths.components + '**/*.pug', paths.pages + '**/*.pug'], ['pages']);
-  gulp.watch(paths.components + '**/*.pcss', ['styles', 'reload']);
+  gulp.watch([paths.components + '**/*.pcss', paths.styles + '*.pcss'] ,['styles', 'reload']);
   gulp.watch(paths.components + '**/*.js', ['scripts', 'reload']);
-  gulp.watch(paths.images + '*.{png,jpg,gif,svg}', ['reload']).on('change', function(event) {
+  gulp.watch(paths.fonts + '**/*.{otf,ttf,woff,woff2}', ['fonts', 'reload']);
+  gulp.watch(paths.images + '*.{png,jpg,gif,svg}', ['images', 'reload']).on('change', function(event) {
     if (event.type === 'deleted') {
       del(paths.images + path.basename(event.path));
       delete cache.caches['images'][event.path];
@@ -63,13 +67,13 @@ gulp.task('fonts', function() {
     .pipe(gulp.dest('src/styles'))
 });
 
-gulp.task('styles', ['fonts'], function () {
-  return gulp.src(paths.source + '**/*.pcss')
+gulp.task('styles', function () {
+  return gulp.src(paths.styles + 'styles.pcss')
     .pipe(plumber({ errorHandler: onError }))
     .pipe(sourcemaps.init())
     .pipe(postcss(processors))
     .pipe(concat('styles.min.css'))
-    .pipe(nano({discardUnused: { fontFace: false, namespace: false }}))
+    .pipe(nano())
     .pipe(sourcemaps.write())
     .pipe(gulp.dest(paths.build));
 });
@@ -103,7 +107,7 @@ gulp.task('cache', function() {
     .pipe(gulp.dest(paths.html));
 });
 
-gulp.task('reload', ['cache'], function() {
+gulp.task('reload', function() {
   return gulp.src(paths.html + '*.html')
     .pipe(plumber({ errorHandler: onError }))
     .pipe(reload({ stream: true }));
@@ -151,7 +155,7 @@ function onError (error) {
   this.emit('end');
 }
 
-gulp.task('build', ['pages', 'styles', 'scripts', 'images', 'cache']);
+gulp.task('build', ['pages', 'styles', 'scripts', 'images', 'fonts', 'cache']);
 
 gulp.task('default', ['build']);
 
