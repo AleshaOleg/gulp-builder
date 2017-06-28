@@ -4,6 +4,7 @@ const gulp = require('gulp'),
   postcss = require('gulp-postcss'),
   precss = require('precss'),
   cssnext = require('postcss-cssnext'),
+  postcssColorFunction = require('postcss-color-function'),
   gutil = require('gulp-util'),
   sourcemaps = require('gulp-sourcemaps'),
   nano = require('gulp-cssnano'),
@@ -24,7 +25,8 @@ const gulp = require('gulp'),
 
 const processors = [
   precss(),
-  cssnext()
+  cssnext(),
+  postcssColorFunction()
 ];
 
 const paths = {
@@ -43,7 +45,7 @@ gulp.task('watch', ['build'], function() {
   gulp.watch([paths.components + '**/*.pug', paths.pages + '**/*.pug'], ['pages']);
   gulp.watch([paths.components + '**/*.pcss', paths.styles + '*.pcss'] ,['styles', 'reload']);
   gulp.watch(paths.components + '**/*.js', ['scripts', 'reload']);
-  gulp.watch(paths.fonts + '**/*.{otf,ttf,woff,woff2}', ['fonts', 'reload']);
+  gulp.watch([paths.fonts + '**/*.{otf,ttf,woff,woff2}', paths.fonts + '*.{otf,ttf,woff,woff2}'], ['fonts', 'reload']);
   gulp.watch(paths.images + '*.{png,jpg,gif,svg}', ['images', 'reload']).on('change', function(event) {
     if (event.type === 'deleted') {
       del(paths.images + path.basename(event.path));
@@ -61,7 +63,7 @@ gulp.task('pages', function() {
 });
 
 gulp.task('fonts', function() {
-  return gulp.src('src/fonts/**/*.{otf,ttf,woff,woff2}')
+  return gulp.src(['src/fonts/**/*.{otf,ttf,woff,woff2}', 'src/fonts/*.{otf,ttf,woff,woff2}'])
     .pipe(font2css())
     .pipe(concat('fonts.pcss'))
     .pipe(gulp.dest('src/styles'))
