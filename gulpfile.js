@@ -85,7 +85,9 @@ gulp.task('scripts', function() {
     .pipe(plumber({errorHandler: onError}))
     .pipe(eslint())
     .pipe(eslint.format())
-    .pipe(babel())
+    .pipe(babel({
+      presets: ['babel-preset-es2015']
+    }))
     .pipe(concat('scripts.min.js'))
     .pipe(uglify())
     .pipe(gulp.dest(paths.build));
